@@ -2,7 +2,7 @@
 import array
 from Vector3 import Vec3, Normalize, Cross
 from Ray import Ray
-from Diffuse import OrientedHemiDir, orthonormal
+from Diffuse import OrientedHemiDir
 from random import random
 from math import sin, cos
 
