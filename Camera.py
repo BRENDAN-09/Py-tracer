@@ -1,9 +1,10 @@
 # Camera.py
 import array
-from Vector3 import Vec3, Normalize
+from Vector3 import Vec3, Normalize, Cross
 from Ray import Ray
 from Diffuse import OrientedHemiDir, orthonormal
 from random import random
+from math import sin, cos
 
 
 class Camera:
@@ -15,11 +16,14 @@ class Camera:
         self.samples = Samples
         self.normal = Vec3(0, 0, -1)
         self.bgColor = Vec3(0.58, 0.74, 1)
+        self.target = Vec3(0, 0, 0)
         self.image_array = array.array(
             'B', [0] * (W * H * 3))
+        self.ca = self.setCamera(self.pos, self.target, 0)
 
     def lookAt(self, pos):
-        self.normal = Normalize(pos - (self.pos))
+        self.target = pos
+        self.ca = self.setCamera(self.pos, self.target, 0)
 
     def savePixel(self, single_pixel, x, y):
         # convert 0-1 to 0-255
@@ -34,10 +38,24 @@ class Camera:
 
     def getDir(self, x, y, z):
         # calculate direction
-        d = Vec3(y / self.h * 2 - 1, x / self.w * 2 - 1, 1)
+        d = Vec3(x / self.w * 2 - 1, y / self.h * 2 - 1, 1)
         d = Normalize(d)
         # Rotate to match camera rotation
-        return orthonormal(d, self.normal)
+        return self.multMat(self.ca, d)
+
+    def setCamera(self, ro, ta, cr):
+        cw = Normalize(ta - ro)
+        cp = Vec3(sin(cr), cos(cr), 0.0)
+        cu = Normalize(Cross(cw, cp))
+        cv = Normalize(Cross(cu, cw))
+        return [cu, cv, cw]
+
+    def multMat(self, mat, vec):
+        out = Vec3(0, 0, 0)
+        dimensions = ["x", "y", "z"]
+        for i in range(3):
+            out = out + (mat[i] ^ getattr(vec, dimensions[i]))
+        return out
 
     # save pixel array to file
     def saveImage(self, filename):
