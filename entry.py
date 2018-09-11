@@ -16,7 +16,7 @@ scene.addLight(sun)
 sky = Sky()
 scene.addLight(sky)
 # Create Camera
-cam = Camera(Vec3(0, 3, 5), 256, 256, Fov=1, Samples=64)
+cam = Camera(Vec3(0, 3, 5), 512, 512, Fov=1, Samples=200)
 cam.lookAt(Vec3(0, 3, 0))
 # Render scene
 cam.render(scene)
