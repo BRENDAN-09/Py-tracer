@@ -1,4 +1,4 @@
-from Camera import Camera
-
-cam = Camera(512, 512)
-cam.render()
+a = [1, 2]
+b = [3, 4]
+a += b
+print(a)
