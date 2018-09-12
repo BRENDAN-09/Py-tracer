@@ -10,6 +10,8 @@ class AABB():
     def __init__(self, v1, v2):
         self.info = [v1, v2]
 
+    def __str__(self):
+        return "" + str(self.info[0]) + ", " + str(self.info[1])
 
     def intersect(self, r):
         lo = -float("Inf")
@@ -66,13 +68,3 @@ class AABB():
         for i in [a, b, c, d, e, f, g, h]:
             boxes.append(AABB(i, m))
         return boxes
-
-
-"""aabb = AABB(Vec3(1, 1, 1), Vec3(0, 0, 0))
-r = Ray(orig=Vec3(2, 2, 2), dir=Vec3(-1, -1, -1))
-i = aabb.containsPoint(Vec3(0.5, 1.2, 0.5))
-t = Triangle(Vec3(0.1, 3, 0.1), Vec3(
-    0.3, 0.3, 0.2), Vec3(0.8, 0.6, 0.2), "gre")
-b = aabb.subDivide()
-f = open("car.json", "w")
-print(b)"""
