@@ -18,10 +18,14 @@ class AABB():
         hi = float("Inf")
 
         for i in ["x", "y", "z"]:
+            divisor = getattr(r.d, i)
+            # Avoid dividing by zero
+            if divisor == 0:
+                divisor += 0.0000000001
             dimLo = (getattr(self.info[0], i) -
-                     getattr(r.o, i)) / getattr(r.d, i)
+                     getattr(r.o, i)) / divisor
             dimHi = (getattr(self.info[1], i) -
-                     getattr(r.o, i)) / getattr(r.d, i)
+                     getattr(r.o, i)) / divisor
 
             # Swap so that dimHi > dimLo
             if dimLo > dimHi:
@@ -55,6 +59,8 @@ class AABB():
         return True
 
     def subDivide(self):
+        # A-H represent the 8 corners of the box
+        # M is the midpoint of the box
         a = self.info[0]
         g = self.info[1]
         b = Vec3(g.x, a.y, a.z)
@@ -63,8 +69,10 @@ class AABB():
         e = Vec3(a.x, g.y, a.z)
         f = Vec3(b.x, g.y, b.z)
         h = Vec3(d.x, g.y, g.z)
+        # Calculate midpoint
         m = self.info[0] + ((self.info[1] - self.info[0]) ^ 0.5)
         boxes = []
+        # Construct all 8 boxes
         for i in [a, b, c, d, e, f, g, h]:
             boxes.append(AABB(i, m))
         return boxes
