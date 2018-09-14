@@ -1,3 +1,4 @@
 100000 rays intersected with 2906 triangles
   Octree: 3.8523399400000926s
   Normal: 25.538890320000064s
+Add support for octree materials

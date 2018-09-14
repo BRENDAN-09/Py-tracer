@@ -44,7 +44,7 @@ class Scene:
             if intersection[0] and 0 < intersection[1] < close[1]:
                 close = intersection
                 index = i
-        return {"t": close, "index": index}
+        return {"t": close, "index": self.primitives[index]}
 
     # return 0 if there is an intersection, 1 otherwise
     def worldShadow(self, ray):

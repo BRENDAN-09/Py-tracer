@@ -49,3 +49,7 @@ class Triangle():
             return miss
 
         return (True, Dot(v0v2, qvec) * invDet, self.computeNormal())
+
+
+def Copytri(t):
+    return Triangle(t.v0, t.v1, t.v2, t.mat)

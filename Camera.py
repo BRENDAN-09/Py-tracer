@@ -110,7 +110,7 @@ class Camera:
             # Calculate intersection position
             pos = ray.o + (ray.d ^ sec[1])
             # load material
-            material = tracer.primitives[isec["index"]].mat
+            material = isec["index"].mat
             # Load surface colour and compute direct lighting
             sCol = tracer.materials[material]
             dCol = self.applyDirectLighting(pos, sec[2], tracer)

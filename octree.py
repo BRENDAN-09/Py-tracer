@@ -1,63 +1,77 @@
 # Octree.py
 from Vector3 import Vec3
-from Triangle import Triangle
+from Triangle import Triangle, Copytri
 from AABB import AABB
 from Ray import Ray
+from copy import deepcopy
 
 
 class Braunch():
     def __init__(self, bounds):
         self.leaves = []
         self.braunches = []
+        self.materials = {}
         self.bounds = bounds
+        self.lights = []
 
+    # WRONG!!!! makes no sense
     def grow(self, triangle):
-        braunches = [Braunch(i) for i in self.bounds.subDivide()]
-        for b in braunches:
-            if b.bounds.containsTri(triangle):
-                # print(b.bounds)
-                b.grow(triangle)
-                if len(self.braunches) == 0:
-                    self.braunches += braunches
-                    # print("hi")
-                break
-        else:
-            self.leaves.append(triangle)
+        activeBox = self
+        possibilities = None
+        itFits = True
+        t = 0
+        while itFits:
+            if len(activeBox.braunches) == 0:
+                activeBox.braunches = [Braunch(i) for i in activeBox.bounds.subDivide()]
+            for i in activeBox.braunches:
+                # print(i.bounds, triangle)
+                if i.bounds.containsTri(triangle):
+                    activeBox = i
+                    break
+            else:
+                activeBox.leaves.append(triangle)
+                itFits = False
+    def pri(self):
+        queue = [self]
+        total = 0
+        for i in queue:
+            queue += i.braunches
+            total+=len(i.leaves)
+        return total
 
     def worldIntersect(self, r):
         miss = (False, float("inf"), Vec3(0, 0, 0))
         queue = [self]
+        index = None
+        # total = 0
         for i in queue:
-            if i.bounds.intersect(r):
-                    # Check leaves
-                intersect = self.intersectLeaves(i.leaves, r)
+            if i.bounds.intersect(r)<1000:
+                # Check leaves
+                intersect, indet = self.intersectLeaves(i.leaves, r)
+                # total += len(i.leaves)
                 if intersect[0] and 0 < intersect[1] < miss[1]:
                     miss = intersect
+                    index = indet
                 # Check braunches
                 queue += i.braunches
-        return {"t": miss}
+        # print(total)
+        return {"t": miss, "index": index}
 
     def worldShadow(self, r):
-        return self.worldIntersect(r)
+        return 0 if self.worldIntersect(r)["t"][0] else 1
+
+    def addMaterials(self, m):
+        self.materials = m
+
+    def addLights(self, l):
+        self.lights = l
 
     def intersectLeaves(self, leaves, ray):
         close = (False, float("inf"), Vec3(0, 0, 0))
-        index = -1
+        indie = None
         for i in range(len(leaves)):
             intersection = leaves[i].intersect(ray)
             if intersection[0] and 0 < intersection[1] < close[1]:
                 close = intersection
-                index = i
-        return close
-
-
-tree = Braunch(AABB(Vec3(-1, -1, -1), Vec3(5, 5, 5)))
-t = Triangle(Vec3(0, 0, 0), Vec3(3, 0, 0), Vec3(0, 3, 0), "gre")
-g = Triangle(Vec3(0, 0, 0.2), Vec3(0, 0., 0.2), Vec3(0, 0.1, 0.2), "gre")
-tree.grow(t)
-tree.grow(g)
-# print(tree.braunches)
-r = Ray(orig=Vec3(0.5, 0.5, 1), dir=Vec3(0, 0, -1))
-# print(len(tree.leaves))
-# print(len(tree.braunches))
-# print(tree.worldIntersect(r))
+                indie = Copytri(leaves[i])
+        return close, indie
