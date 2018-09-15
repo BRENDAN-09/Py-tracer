@@ -22,8 +22,8 @@ class AABB():
             # Avoid dividing by zero
             if divisor == 0:
                 divisor += 0.0000000001
-            dimLo = (getattr(self.info[0], i) -
-                     getattr(r.o, i)) / divisor
+            dimLo = (self.info[0].__dict__.get(i) -
+                     r.o.__dict__.get(i)) / divisor
             dimHi = (getattr(self.info[1], i) -
                      getattr(r.o, i)) / divisor
 

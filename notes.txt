@@ -1,4 +1,107 @@
 100000 rays intersected with 2906 triangles
   Octree: 3.8523399400000926s
   Normal: 25.538890320000064s
-Add support for octree materials
+
+Rendering untitled.obj,
+  octree: 148.57928105599422
+  normal: 289.95695481900475
+
+  Line #      Hits         Time  Per Hit   % Time  Line Contents
+  ==============================================================
+      16                                               @profile
+      17                                               def intersect(self, r):
+      18   1979833    1491268.0      0.8      3.4          lo = -float("Inf")
+      19   1979833    1423058.0      0.7      3.3          hi = float("Inf")
+      20
+      21   5576496    2958207.0      0.5      6.8          for i in ["x", "y", "z"]:
+      22   5016415    3657579.0      0.7      8.4              divisor = getattr(r.d, i)
+      23                                                       # Avoid dividing by zero
+      24   5016415    2775512.0      0.6      6.4              if divisor == 0:
+      25                                                           divisor += 0.0000000001
+      26   5016415    3844795.0      0.8      8.9              dimLo = (getattr(self.info[0], i) -
+      27   5016415    3935110.0      0.8      9.1                       getattr(r.o, i)) / divisor
+      28   5016415    3758874.0      0.7      8.7              dimHi = (getattr(self.info[1], i) -
+      29   5016415    3844475.0      0.8      8.9                       getattr(r.o, i)) / divisor
+      30
+      31                                                       # Swap so that dimHi > dimLo
+      32   5016415    2866136.0      0.6      6.6              if dimLo > dimHi:
+      33   2499530    1398892.0      0.6      3.2                  dimLo, dimHi = dimHi, dimLo
+      34
+      35   5016415    3055300.0      0.6      7.0              if dimHi < lo or dimLo > hi:
+      36   1419752    1050603.0      0.7      2.4                  return float("Inf")
+      37
+      38   3596663    2011850.0      0.6      4.6              if dimLo > lo:
+      39   2920529    1529733.0      0.5      3.5                  lo = dimLo
+      40
+      41   3596663    1985098.0      0.6      4.6              if dimHi < hi:
+      42   2903458    1474505.0      0.5      3.4                  hi = dimHi
+      43
+      44    560081     310567.0      0.6      0.7          return float("Inf") if lo > hi else lo
+
+
+
+      Line #      Hits         Time  Per Hit   % Time  Line Contents
+      ==============================================================
+          94                                               @profile
+          95                                               def rendererCalcColor(self, ray, numBounce, tracer):
+          96     16384      33629.0      2.1      0.0          tCol = Vec3(0, 0, 0)
+          97     16384      27466.0      1.7      0.0          fCol = Vec3(1, 1, 1)
+          98
+          99     25171      27291.0      1.1      0.0          for i in range(numBounce):
+         100                                                       # intersect with seen
+         101     24940  107033359.0   4291.6     59.2              isec = tracer.worldIntersect(ray)
+         102                                                       # intersection information
+         103     24940      22459.0      0.9      0.0              sec = isec["t"]
+         104                                                       # if no intersection
+         105     24940      18227.0      0.7      0.0              if not sec[0]:
+         106                                                           # stop the accumulation process or return the sky
+         107     16153      11563.0      0.7      0.0                  if i == 0:
+         108      9452       7898.0      0.8      0.0                      return self.bgColor
+         109                                                           else:
+         110      6701       4890.0      0.7      0.0                      break
+         111                                                       # Calculate intersection position
+         112      8787      53664.0      6.1      0.0              pos = ray.o + (ray.d ^ sec[1])
+         113                                                       # load material
+         114      8787       8262.0      0.9      0.0              material = isec["index"].mat
+         115                                                       # Load surface colour and compute direct lighting
+         116      8787       8713.0      1.0      0.0              sCol = tracer.materials[material]
+         117      8787   73059084.0   8314.5     40.4              dCol = self.applyDirectLighting(pos, sec[2], tracer)
+         118                                                       # Create new ray
+         119      8787      43738.0      5.0      0.0              ray = Ray(orig=pos + (sec[2] ^ 0.1),
+         120      8787     329121.0     37.5      0.2                        dir=OrientedHemiDir(sec[2]))
+         121                                                       # accumulate colours
+         122      8787      27470.0      3.1      0.0              fCol = sCol * fCol
+         123      8787      42257.0      4.8      0.0              tCol += fCol * dCol
+         124      6932       4062.0      0.6      0.0          return tCol
+
+
+         Line #      Hits         Time  Per Hit   % Time  Line Contents
+         ==============================================================
+             40                                               @profile
+             41                                               def worldIntersect(self, r):
+             42     24924      62099.0      2.5      0.1          miss = (False, float("inf"), Vec3(0, 0, 0))
+             43     24924      16059.0      0.6      0.0          queue = [self]
+             44     24924      13108.0      0.5      0.0          index = None
+             45   1212120     622200.0      0.5      0.9          for i in queue:
+             46   1187196   14979498.0     12.6     21.4              if i.bounds.intersect(r) < 1000:
+             47                                                           # Check leaves
+             48    338235   53366965.0    157.8     76.2                  intersect, indet = self.intersectLeaves(i.leaves, r)
+             49    338235     314628.0      0.9      0.4                  self.average += len(i.leaves)
+             50    338235     226104.0      0.7      0.3                  self.time += 1
+             51    338235     188480.0      0.6      0.3                  if intersect[0] and 0 < intersect[1] < miss[1]:
+             52     10783       6995.0      0.6      0.0                      miss = intersect
+             53     10783       5578.0      0.5      0.0                      index = indet
+             54                                                           # Check braunches
+             55    338235     237109.0      0.7      0.3                  queue += i.braunches
+             56                                                   # print(total)
+             57     24924      21347.0      0.9      0.0          return {"t": miss, "index": index}
+             79                                               @profile
+             80                                               def intersectLeaves(self, leaves, ray):
+             81    560050    1125238.0      2.0      1.1          close = (False, float("inf"), Vec3(0, 0, 0))
+             82    560050     242859.0      0.4      0.2          indie = None
+             83   6401382    3086092.0      0.5      3.0          for i in leaves:
+             84   5841332   95176853.0     16.3     92.6              intersection = i.intersect(ray)
+             85   5841332    2880917.0      0.5      2.8              if intersection[0] and 0 < intersection[1] < close[1]:
+             86     15485       9111.0      0.6      0.0                  close = intersection
+             87     15485       7462.0      0.5      0.0                  indie = i
+             88    560050     251964.0      0.4      0.2          return close, indie

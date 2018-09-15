@@ -1,9 +1,6 @@
 # Octree.py
-from Vector3 import Vec3
-from Triangle import Triangle, Copytri
-from AABB import AABB
-from Ray import Ray
-from copy import deepcopy
+from Vector3 import Vec3, Dot
+from Triangle import Copytri
 
 
 class Braunch():
@@ -13,16 +10,16 @@ class Braunch():
         self.materials = {}
         self.bounds = bounds
         self.lights = []
+        self.average = 0
+        self.time = 0
 
-    # WRONG!!!! makes no sense
     def grow(self, triangle):
         activeBox = self
-        possibilities = None
         itFits = True
-        t = 0
         while itFits:
             if len(activeBox.braunches) == 0:
-                activeBox.braunches = [Braunch(i) for i in activeBox.bounds.subDivide()]
+                activeBox.braunches = [
+                    Braunch(i) for i in activeBox.bounds.subDivide()]
             for i in activeBox.braunches:
                 # print(i.bounds, triangle)
                 if i.bounds.containsTri(triangle):
@@ -31,24 +28,25 @@ class Braunch():
             else:
                 activeBox.leaves.append(triangle)
                 itFits = False
+
     def pri(self):
         queue = [self]
         total = 0
         for i in queue:
             queue += i.braunches
-            total+=len(i.leaves)
+            total += len(i.leaves)
         return total
 
     def worldIntersect(self, r):
         miss = (False, float("inf"), Vec3(0, 0, 0))
         queue = [self]
         index = None
-        # total = 0
         for i in queue:
-            if i.bounds.intersect(r)<1000:
+            if i.bounds.intersect(r) < 1000:
                 # Check leaves
                 intersect, indet = self.intersectLeaves(i.leaves, r)
-                # total += len(i.leaves)
+                self.average += len(i.leaves)
+                self.time += 1
                 if intersect[0] and 0 < intersect[1] < miss[1]:
                     miss = intersect
                     index = indet
@@ -58,7 +56,19 @@ class Braunch():
         return {"t": miss, "index": index}
 
     def worldShadow(self, r):
-        return 0 if self.worldIntersect(r)["t"][0] else 1
+        queue = [self]
+        for i in queue:
+            if i.bounds.intersect(r) < 1000:
+                # Check leaves
+                intersect, indet = self.intersectLeaves(i.leaves, r)
+                self.average += len(i.leaves)
+                self.time += 1
+                if intersect[0] and 0 < intersect[1] < 100000:
+                    return 0
+                # Check braunches
+                queue += i.braunches
+        # print(total)
+        return 1
 
     def addMaterials(self, m):
         self.materials = m
@@ -66,12 +76,26 @@ class Braunch():
     def addLights(self, l):
         self.lights = l
 
+    # prints a textual representation of the tree
+    def display(self):
+        queue = [[self, 0]]
+        q = 0
+        prevdepth = 0
+        while len(queue) > 0:
+            active = queue.pop()
+            q += len(active[0].leaves)
+            if not prevdepth == active[1]:
+                print(str(active[1]) + "    " * active[1] + str(q))
+                q = 0
+            prevdepth = active[1]
+            queue += [[i, active[1]+1] for i in active[0].braunches]
+
     def intersectLeaves(self, leaves, ray):
         close = (False, float("inf"), Vec3(0, 0, 0))
         indie = None
-        for i in range(len(leaves)):
-            intersection = leaves[i].intersect(ray)
+        for i in leaves:
+            intersection = i.intersect(ray)
             if intersection[0] and 0 < intersection[1] < close[1]:
                 close = intersection
-                indie = Copytri(leaves[i])
+                indie = i
         return close, indie

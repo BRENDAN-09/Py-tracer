@@ -4,8 +4,6 @@ from AABB import AABB
 from Vector3 import Vec3
 from Ray import Ray
 from timeit import default_timer as timer
-from Diffuse import sampleHemisphere
-from random import random
 from Sun import Sun
 from Sky import Sky
 from Camera import Camera
@@ -13,8 +11,9 @@ from Camera import Camera
 # Create new scene
 scene = Scene()
 # Load Model and materials
-scene.loadModel("untitled.obj", "untitled.mtl")
+scene.loadModel("blocks.obj", "blocks.mtl")
 # Create new Octree
+# Calculate the bounding box of the scene
 minx = miny = minz = +10000
 maxx = maxy = maxz = -10000
 for i in scene.primitives:
@@ -27,22 +26,10 @@ for i in scene.primitives:
 
 tree = Braunch(AABB(Vec3(minx, miny , minz ),
                     Vec3(maxx , maxy , maxz )))
-print(tree.bounds)
+
 for t in scene.primitives:
-    tree.grow(deepcopy(t))
-r = Ray(orig=Vec3(0.5, 0.5, 1), dir=Vec3(0, -1, -1))
-a = scene.worldIntersect(r)
-b = tree.worldIntersect(r)
-ts = timer()
-"""for i in range(100000):
-    d = []
-    v = []
-    for i in range(3):
-        d.append(random()*7-3.5)
-        v.append(random()*7-3.5)
-    ray = Ray(orig=Vec3(*d), dir=Vec3(*v))
-    tree.worldIntersect(ray)
-print(timer()-ts)"""
+    tree.grow((t))
+
 
 sun = Sun(pos=Vec3(40, 100, 30))
 sun.lookAt(Vec3(0, 0, 0))
@@ -51,13 +38,16 @@ scene.addLight(sun)
 sky = Sky()
 scene.addLight(sky)
 # Create Camera
-cam = Camera(Vec3(2, 10, 5), 512, 512, Fov=1, Samples=2)
+cam = Camera(Vec3(-2, 3, -3), 128, 128, Fov=1, Samples=1)
 cam.lookAt(Vec3(0, 0, 0))
 tree.addMaterials(scene.materials)
 tree.addLights(scene.lights)
 print(len(tree.leaves))
 print(len(tree.braunches))
 print(tree.pri())
+tree.display()
 # Render scene
+ts = timer()
 cam.render(tree)
-print(timer()-ts)
+print("Render time: {}".format(timer()-ts))
+print("Average intersections: {}".format(tree.average/tree.time))

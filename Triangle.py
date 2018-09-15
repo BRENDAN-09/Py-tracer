@@ -8,6 +8,7 @@ class Triangle():
         self.v1 = v1e
         self.v2 = v2e
         self.mat = Mat
+        self.normal = self.computeNormal()
 
     def __str__(self):
         return "({0}, {1}, {2})".format(self.v0, self.v1, self.v2)
@@ -22,6 +23,7 @@ class Triangle():
         # Returns Tuple: (Hit, distance, normal)
         # Miss object
         miss = (False, 0, Vec3(0, 0, 0))
+        normal = Vec3(0, 0, 0)
         v0 = self.v0
         v1 = self.v1
         v2 = self.v2
@@ -48,7 +50,7 @@ class Triangle():
         if v < 0 or u + v > 1:
             return miss
 
-        return (True, Dot(v0v2, qvec) * invDet, self.computeNormal())
+        return (True, Dot(v0v2, qvec) * invDet, self.normal)
 
 
 def Copytri(t):
