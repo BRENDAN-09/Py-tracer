@@ -31,14 +31,15 @@ for t in scene.primitives:
     tree.grow((t))
 
 
-sun = Sun(pos=Vec3(40, 100, 30))
+sun = Sun(pos=Vec3(-20, 30, 30))
 sun.lookAt(Vec3(0, 0, 0))
 scene.addLight(sun)
+sun.size = 3
 # Create sky
-sky = Sky()
+sky = Sky(colour=Vec3(0.3, 0.2, 0.3))
 scene.addLight(sky)
 # Create Camera
-cam = Camera(Vec3(-2, 3, -3), 128, 128, Fov=1, Samples=1)
+cam = Camera(Vec3(-4, 3, -5), 512, 512, Fov=1, Samples=100)
 cam.lookAt(Vec3(0, 0, 0))
 tree.addMaterials(scene.materials)
 tree.addLights(scene.lights)
