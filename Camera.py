@@ -5,23 +5,28 @@ from Ray import Ray
 from Diffuse import OrientedHemiDir
 from random import random
 from math import sin, cos
+import os
 
 
 class Camera:
     def __init__(self, Pos, W, H, Fov=1, Samples=256):
+        # Init variables
         self.fov = Fov
-        self.w = W
-        self.h = H
-        self.pos = Pos
-        self.samples = Samples
-        self.normal = Vec3(0, 0, -1)
-        self.bgColor = Vec3(0.58, 0.74, 1)
-        self.target = Vec3(0, 0, 0)
+        self.w = W  # Width
+        self.h = H  # Height
+        self.pos = Pos  # Camera position
+        self.samples = Samples  # Sample Rate
+        self.normal = Vec3(0, 0, -1)  # Normal (used for rotation)
+        self.bgColor = Vec3(0.58, 0.74, 1)  # background colour
+        self.target = Vec3(0, 0, 0)  # Camera target, used for rotation
+        self.barWidth = 50  # progress bar width
         self.image_array = array.array(
-            'B', [0] * (W * H * 3))
+            'B', [0] * (W * H * 3))  # Array for image data
+        # set rotation matrix
         self.ca = self.setCamera(self.pos, self.target, 0)
 
     def lookAt(self, pos):
+        # set the position
         self.target = pos
         self.ca = self.setCamera(self.pos, self.target, 0)
 
@@ -43,15 +48,22 @@ class Camera:
         # Rotate to match camera rotation
         return self.multMat(self.ca, d)
 
-    def setCamera(self, ro, ta, cr):
+    def setCamera(self):
+        ro = self.pos  # ray origin
+        ta = self.target  # ray target
+        cr = 0  # Angular rotation (keep this at 0)
+        # Construct the matix using some fancy linear algebra
         cw = Normalize(ta - ro)
         cp = Vec3(sin(cr), cos(cr), 0.0)
         cu = Normalize(Cross(cw, cp))
         cv = Normalize(Cross(cu, cw))
         return [cu, cv, cw]
 
+    # Very hacky shorthand matrix multiplication
     def multMat(self, mat, vec):
+        # Initialise the output vector
         out = Vec3(0, 0, 0)
+        # iterate through the dimensions
         dimensions = ["x", "y", "z"]
         for i in range(3):
             out = out + (mat[i] ^ getattr(vec, dimensions[i]))
@@ -72,28 +84,40 @@ class Camera:
         image.close()
         print("Image Saved")
 
-    def render(self, tracer):
+    def render(self, tracer, imgOut):
         # loop through all the pixels in the image
         for x in range(self.w):
             for y in range(self.h):
                 col = Vec3(0, 0, 0)
+                # Aspect correction in the case the output image is not square
+                mx = x * self.w/self.h
                 # average the samples
                 for i in range(self.samples):
                     # calculate direction
                     # Adds the random to get anti-aliasing
-                    a = self.getDir(x + random(), y + random(), 1)
+                    a = self.getDir(mx + random(), y + random(), 1)
                     # create ray for rendering
                     ray = Ray(orig=self.pos, dir=a)
                     # render!
                     col = col + self.rendererCalcColor(ray, 4, tracer)
                 col = col ^ (1 / self.samples)  # average the samples
                 self.savePixel(col, x, y)  # save pixel
-            print("{0} percent done".format(x / self.w * 100))
-        self.saveImage("gi.ppm")  # save image
+            # ===Update progress bar===
+            # Clear terminal
+            os.system('cls' if os.name == 'nt' else 'clear')
+            # Calculate progress
+            prog = int(round((x) / self.w * self.barWidth))
+            # Print progress bar
+            print("[" + "=" * prog + ">" + " " * (self.barWidth - prog) + "] " +
+                  str(round(prog * (100 / self.barWidth))) +
+                  "% completed")
+        # ===Save Image===
+        self.saveImage(imgOut)  # save image
 
     def rendererCalcColor(self, ray, numBounce, tracer):
+        # Variables for colour accumulation
         tCol = Vec3(0, 0, 0)
-        fCol = Vec3(1, 1, 1)
+        gCol = Vec3(1, 1, 1)
 
         for i in range(numBounce):
             # intersect with seen
@@ -118,12 +142,15 @@ class Camera:
             ray = Ray(orig=pos + (sec[2] ^ 0.1),
                       dir=OrientedHemiDir(sec[2]))
             # accumulate colours
-            fCol = sCol * fCol
-            tCol += fCol * dCol
+            gCol = sCol * gCol
+            tCol += gCol * dCol
+        # return the total colour
         return tCol
 
     def applyDirectLighting(self, pos, nor, scene):
+        # start the accumulation
         dCol = Vec3(0, 0, 0)
+        # iterate over lights and accumulate colors
         for i in scene.lights:
             dCol += i.calcDirect(pos, nor, scene)
         return dCol

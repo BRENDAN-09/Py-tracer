@@ -8,6 +8,7 @@ class Scene:
         self.primitives = []
         self.materials = {}
         self.lights = []
+        self.average = 0
 
     def addPrimitive(self, prim):
         self.primitives.append(prim)
@@ -41,6 +42,7 @@ class Scene:
         index = -1
         for i in range(len(self.primitives)):
             intersection = self.primitives[i].intersect(ray)
+            self.average += 1
             if intersection[0] and 0 < intersection[1] < close[1]:
                 close = intersection
                 index = i

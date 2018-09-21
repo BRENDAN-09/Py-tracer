@@ -30,10 +30,10 @@ class AABB():
             # Swap so that dimHi > dimLo
             if dimLo > dimHi:
                 dimLo, dimHi = dimHi, dimLo
-
+            # chech the ray hasn't missed
             if dimHi < lo or dimLo > hi:
                 return float("Inf")
-
+            # Update dimLo and dimHi
             if dimLo > lo:
                 lo = dimLo
 
@@ -43,19 +43,26 @@ class AABB():
         return float("Inf") if lo > hi else lo
 
     def containsPoint(self, p):
+        # iterate over dimensions
         for i in ["x", "y", "z"]:
+            # iterate through the dimensions
+            # get dimensional range
             tmin = getattr(self.info[0], i)
             tmax = getattr(self.info[1], i)
             q = getattr(p, i)
+            # check if p is in dimensional range
             if not((tmin <= q <= tmax) or (tmax <= q <= tmin)):
                 return False
         return True
 
     def containsTri(self, t):
+        # iterate through points
         for i in ["v0", "v1", "v2"]:
+            # check if point is in box
             p = self.containsPoint(getattr(t, i))
             if not p:
                 return False
+        # only if all three points are in the box is the triangle in the box
         return True
 
     def subDivide(self):
