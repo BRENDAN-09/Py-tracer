@@ -106,8 +106,12 @@ class Camera:
             out = out + (mat[i] ^ getattr(vec, dimensions[i]))
         return out
 
-    # save pixel array to file
     def saveImage(self, filename):
+        """
+        Saves an image to a ppm file.
+        Parameters:
+            filename: String. The name of the file to be saved
+        """
         # create image file
         image = open(filename, 'wb')
         # write magic number, and filename
@@ -122,6 +126,12 @@ class Camera:
         print("Image Saved")
 
     def render(self, tracer, imgOut):
+        """
+        Renders a scene to an image
+        Parameters:
+            tracer: Scene. The scene to be rendered.
+            imgOut: String. The name of the output file
+        """
         # loop through all the pixels in the image
         for x in range(self.w):
             for y in range(self.h):
@@ -152,6 +162,13 @@ class Camera:
         self.saveImage(imgOut)  # save image
 
     def rendererCalcColor(self, ray, numBounce, tracer):
+        """
+        Calculates a pixel colour given a starting ray using Monte Carlo magik!
+        Parameters:
+            ray: Ray. The ray to be traced
+            numBounce: Int. The number of bounces the ray is allowed to do
+            tracer: Scene. The scene
+        """
         # Variables for colour accumulation
         tCol = Vec3(0, 0, 0)
         gCol = Vec3(1, 1, 1)
@@ -185,6 +202,13 @@ class Camera:
         return tCol
 
     def applyDirectLighting(self, pos, nor, scene):
+        """
+        Applies Direct lighting
+        Parameters:
+            pos: Vec3. The point to apply the direct lighting
+            nor: Vec3. The surface normal.
+            scene: Scene. The scene.
+        """
         # start the accumulation
         dCol = Vec3(0, 0, 0)
         # iterate over lights and accumulate colors

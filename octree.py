@@ -1,4 +1,5 @@
 # Octree.py
+# Contains the octree class
 from Vector3 import Vec3, Dot
 from Triangle import Copytri
 from AABB import AABB
@@ -6,6 +7,9 @@ from AABB import AABB
 
 class Braunch():
     def __init__(self, b=AABB(Vec3(0, 0, 0), Vec3(0, 0, 0))):
+        """
+        Initializes a Braunch Class
+        """
         self.leaves = []
         self.braunches = []
         self.materials = {}
@@ -15,6 +19,11 @@ class Braunch():
         self.time = 0
 
     def fromScene(self, scene):
+        """
+        Constructs an octree from a scene
+        Parameters:
+            Scene: Scene. The scene to construct an octree from.
+        """
         # Calculate the bounding box of the scene
         minx = miny = minz = +10000
         maxx = maxy = maxz = -10000
@@ -33,6 +42,11 @@ class Braunch():
         self.addLights(scene.lights)
 
     def grow(self, triangle):
+        """
+        Adds a triangle to the octree.
+        Parameters:
+            triangle: Triangle. The triangle to add.
+        """
         activeBox = self
         itFits = True
         while itFits:
@@ -56,6 +70,7 @@ class Braunch():
                     itFits = False
 
     def pri(self):
+        "counts the number of leaves (not important)"
         queue = [self]
         total = 0
         for i in queue:
@@ -64,6 +79,7 @@ class Braunch():
         return total
 
     def collapse(self):
+        "culls a braunch (not important)"
         queue = [self]
         while len(queue) > 0:
             i = queue.pop()
@@ -73,7 +89,14 @@ class Braunch():
         self.leaves = []
 
     def worldIntersect(self, r):
+        """
+        intersects the ray with the octree.
+        Parameters:
+            r: Ray. The ray to intersect
+        return: Tuple (Bool hit, Float distance, Vec3 normal)
+        """
         miss = (False, float("inf"), Vec3(0, 0, 0))
+        # Breadth first search
         queue = [self]
         index = None
         for i in queue:
@@ -89,6 +112,12 @@ class Braunch():
         return {"t": miss, "index": index}
 
     def worldShadow(self, r):
+        """
+        intersects the ray with the octree.
+        Parameters:
+            r: Ray. The ray to intersect
+        return: Int. 0 if intersection exists otherwise 1.
+        """
         queue = [self]
         for i in queue:
             if i.bounds.intersect(r) < 1000:
