@@ -1,5 +1,5 @@
 # AABB.py
-# Axis Aligned Bounding Box
+"Contains the AABB (Axis Aligned Bounding Box) class"
 from Vector3 import Vec3
 from Ray import Ray
 from Triangle import Triangle
@@ -8,12 +8,25 @@ import json
 
 class AABB():
     def __init__(self, v1, v2):
+        """
+        Creates a new AABB
+        Parameters:
+            v1, v2: Vec3. Two diagonally oppsite corners of box
+        return: None
+        """
         self.info = [v1, v2]
 
     def __str__(self):
+        "AABB to string for easy printing and testing"
         return "" + str(self.info[0]) + ", " + str(self.info[1])
 
     def intersect(self, r):
+        """
+        Intersects a ray with a AABB.
+        Parameters:
+            r: Ray. The ray to be intersected
+        return: Float. Inf if miss, distance to intersection if hit.
+        """
         lo = -float("Inf")
         hi = float("Inf")
 
@@ -43,6 +56,12 @@ class AABB():
         return float("Inf") if lo > hi else lo
 
     def containsPoint(self, p):
+        """
+        Determines if an AABB contains a specific point
+        Parameters:
+            p: Vec3. The point to be tested.
+        return: Bool. Is the point in the AABB
+        """
         # iterate over dimensions
         for i in ["x", "y", "z"]:
             # iterate through the dimensions
@@ -56,6 +75,12 @@ class AABB():
         return True
 
     def containsTri(self, t):
+        """
+        Determines if an AABB contains a specific triangle
+        Parameters:
+            t: Triangle. The triangle to be tested.
+        return: Bool. Is the triangle in the AABB
+        """
         # iterate through points
         for i in ["v0", "v1", "v2"]:
             # check if point is in box
@@ -66,6 +91,10 @@ class AABB():
         return True
 
     def subDivide(self):
+        """
+        Subdivides into 8 smaller AABB's
+        returns: List. 8 smaller AABB's
+        """
         # A-H represent the 8 corners of the box
         # M is the midpoint of the box
         a = self.info[0]

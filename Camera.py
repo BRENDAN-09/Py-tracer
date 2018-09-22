@@ -10,6 +10,16 @@ import os
 
 class Camera:
     def __init__(self, Pos, W, H, Fov=1, Samples=256):
+        """
+        Initialises a Camera class.
+        Parameters:
+            Pos: Vec3. The position of the camera
+            W: Float. The camera width
+            H: Float. The camera height
+        Optional Parameters:
+            Fov: Float. The field of view constant of the camera. Default 1.
+            Samples: Int. The rendering sample rate. Deafault 256
+        """
         # Init variables
         self.fov = Fov
         self.w = W  # Width
@@ -23,14 +33,27 @@ class Camera:
         self.image_array = array.array(
             'B', [0] * (W * H * 3))  # Array for image data
         # set rotation matrix
-        self.ca = self.setCamera(self.pos, self.target, 0)
+        self.ca = self.setCamera()
 
     def lookAt(self, pos):
+        """
+        Updates the rotation matrix so that the camera is looking
+        at a certain point
+        Parameters:
+            Pos: Vec3. The point to look at
+        """
         # set the position
         self.target = pos
-        self.ca = self.setCamera(self.pos, self.target, 0)
+        self.ca = self.setCamera()
 
     def savePixel(self, single_pixel, x, y):
+        """
+        Saves a pixel to the camera's image_array.
+        Parameters:
+            single_pixel: The pixel to be saved
+            x: The x coordinates to save it at
+            y: The y coordinates to save it at
+        """
         # convert 0-1 to 0-255
         pixel = single_pixel ^ 255
         # clamp pixel
@@ -41,7 +64,13 @@ class Camera:
         self.image_array[i * 3 + 1] = int(pixel.y)
         self.image_array[i * 3 + 2] = int(pixel.z)
 
-    def getDir(self, x, y, z):
+    def getDir(self, x, y):
+        """
+        Get direction from pixel coordinates
+        Parameters:
+            x: The pixel's x coordinates
+            y: The pixel's y coordinates
+        """
         # calculate direction
         d = Vec3(x / self.w * 2 - 1, y / self.h * 2 - 1, 1)
         d = Normalize(d)
@@ -49,9 +78,12 @@ class Camera:
         return self.multMat(self.ca, d)
 
     def setCamera(self):
+        """
+        Updates the camera's rotation matrix
+        """
         ro = self.pos  # ray origin
         ta = self.target  # ray target
-        cr = 0  # Angular rotation (keep this at 0)
+        cr = 0  # Angular rotation (should always be 0)
         # Construct the matix using some fancy linear algebra
         cw = Normalize(ta - ro)
         cp = Vec3(sin(cr), cos(cr), 0.0)
@@ -59,8 +91,13 @@ class Camera:
         cv = Normalize(Cross(cu, cw))
         return [cu, cv, cw]
 
-    # Very hacky shorthand matrix multiplication
     def multMat(self, mat, vec):
+        """
+        Multiplies a Vec3 by a matrix.
+        Parameters:
+            mat: List<Vec3>. The matrix to be multiplied
+            vec: Vec3. The vector to be multiplied
+        """
         # Initialise the output vector
         out = Vec3(0, 0, 0)
         # iterate through the dimensions
@@ -95,7 +132,7 @@ class Camera:
                 for i in range(self.samples):
                     # calculate direction
                     # Adds the random to get anti-aliasing
-                    a = self.getDir(mx + random(), y + random(), 1)
+                    a = self.getDir(mx + random(), y + random())
                     # create ray for rendering
                     ray = Ray(orig=self.pos, dir=a)
                     # render!

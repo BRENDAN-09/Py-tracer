@@ -28,9 +28,9 @@ ts = timer()
 if useTree:
     tree = Braunch()
     tree.fromScene(scene)
-    cam.render(tree)
+    cam.render(tree, "gu.ppm")
 else:
-    cam.render(scene)
-# print 
+    cam.render(scene, "gu.ppm")
+# print
 print("Render time: {}".format(timer()-ts))
 print(scene.average)
