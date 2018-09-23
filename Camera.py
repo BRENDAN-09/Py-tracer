@@ -6,6 +6,7 @@ from Diffuse import OrientedHemiDir
 from random import random
 from math import sin, cos
 import os
+import png
 
 
 class Camera:
@@ -27,11 +28,11 @@ class Camera:
         self.pos = Pos  # Camera position
         self.samples = Samples  # Sample Rate
         self.normal = Vec3(0, 0, -1)  # Normal (used for rotation)
-        self.bgColor = Vec3(0.58, 0.74, 1)  # background colour
+        self.bgColor = Vec3(1, 1, 1)  # background colour
         self.target = Vec3(0, 0, 0)  # Camera target, used for rotation
         self.barWidth = 50  # progress bar width
-        self.image_array = array.array(
-            'B', [0] * (W * H * 3))  # Array for image data
+        # Array for image data
+        self.image_array = [[0]*(self.w*3) for i in range(self.h)]
         # set rotation matrix
         self.ca = self.setCamera()
 
@@ -59,10 +60,11 @@ class Camera:
         # clamp pixel
         pixel.clamp(0.0, 255.0)
         # write to array
-        i = ((self.h - y - 1) * self.w + x)
-        self.image_array[i * 3 + 0] = int(pixel.x)
-        self.image_array[i * 3 + 1] = int(pixel.y)
-        self.image_array[i * 3 + 2] = int(pixel.z)
+        x *= 3
+        m = -y + self.h - 1
+        self.image_array[m][x] = int(pixel.x)
+        self.image_array[m][x+1] = int(pixel.y)
+        self.image_array[m][x+2] = int(pixel.z)
 
     def getDir(self, x, y):
         """
@@ -72,7 +74,7 @@ class Camera:
             y: The pixel's y coordinates
         """
         # calculate direction
-        d = Vec3(x / self.w * 2 - 1, y / self.h * 2 - 1, 1)
+        d = Vec3(x / self.w * 2 - 1, y / self.h * 2 - 1, self.fov)
         d = Normalize(d)
         # Rotate to match camera rotation
         return self.multMat(self.ca, d)
@@ -115,14 +117,10 @@ class Camera:
         # create image file
         image = open(filename, 'wb')
         # write magic number, and filename
-        image.write(("P6\n#" + filename).encode())
-        # write image width, height and max colour-component value
-        image.write(("\n" + str(self.w) + " " +
-                     str(self.h) + "\n255\n").encode())
-        # write image_array to .ppm file
-        image.write(self.image_array.tostring())
-        # close .ppm file
+        writer = png.Writer(self.w, self.h)
+        writer.write(image, self.image_array)
         image.close()
+        # close .ppm file
         print("Image Saved")
 
     def render(self, tracer, imgOut):
