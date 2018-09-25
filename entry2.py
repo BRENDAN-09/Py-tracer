@@ -20,16 +20,20 @@ scene.addLight(sun)
 sky = Sky()
 scene.addLight(sky)
 # Create Camera
-cam = Camera(Vec3(-8, 5, 8), int(1024), int(1024), Fov=1.4, Samples=40)
+cam = Camera(Vec3(8, 4, 8), int(2000), int(2000), Fov=1.4, Samples=200)
 cam.lookAt(Vec3(0, 3, 0))
 # Render scene
 ts = timer()
 if useTree:
     tree = Braunch()
     tree.fromScene(scene)
-    cam.render(tree, "gu.png")
+    cam.render(tree, "pyramid.png")
 else:
-    cam.render(scene, "gu.png")
+    cam.render(scene, "pyramid.png")
+"""w = 100
+h = 200
+for x in range(0,100,10):
+    print(x)"""
 
 print("Render time: {}".format(timer()-ts))
 print(scene.average)

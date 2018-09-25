@@ -116,7 +116,7 @@ class Camera:
         """
         # create image file
         image = open(filename, 'wb')
-        # write magic number, and filename
+        # set up pypng and 
         writer = png.Writer(self.w, self.h)
         writer.write(image, self.image_array)
         image.close()
@@ -135,7 +135,8 @@ class Camera:
             for y in range(self.h):
                 col = Vec3(0, 0, 0)
                 # Aspect correction in the case the output image is not square
-                mx = x * self.w/self.h
+                # This took me super long to figure out
+                mx = ((x + (self.h - self.w) / 2) * self.w/self.h)
                 # average the samples
                 for i in range(self.samples):
                     # calculate direction

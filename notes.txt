@@ -1,5 +1,12 @@
+Monkey
 [==================================================>] 100% completed
 Image Saved
 Render time: 13933.135388515948
 117743724784
-Brendans-Air:Geometry brendan$ 
+Brendans-Air:Geometry brendan$
+
+good pyramid
+[==================================================>] 100% completed
+Image Saved
+Render time: 16648.012917330998
+151531220268

@@ -5,7 +5,7 @@ from Ray import Ray
 
 
 class Sky:
-    def __init__(self, colour=Vec3(0.4, 0.4, 0.45)):
+    def __init__(self, colour=Vec3(0.6, 0.6, 0.55)):
         """initializes a sky class
         Optional parameters:
             colour: Vec3. The colour of the sun. Default Vec3(0.4, 0.4, 0.45)

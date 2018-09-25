@@ -5,7 +5,7 @@ from Ray import Ray
 
 
 class Sun:
-    def __init__(self, size=2, normal=Vec3(0, 0, 1), pos=Vec3(1, 0, 0), colour=Vec3(0.97, 0.97, 0.72)):
+    def __init__(self, size=2, normal=Vec3(0, 0, 1), pos=Vec3(1, 0, 0), colour=Vec3(0.77, 0.77, 0.72)):
         """
         Initializes a sun class
         Optional Parmeters:
