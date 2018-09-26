@@ -6,6 +6,7 @@ from Sky import Sky
 from timeit import default_timer as timer
 from Octree import Braunch
 import lighting
+import os.path as path
 
 samples = width = height = None
 
@@ -19,22 +20,29 @@ def inputInt(s):
         break
     return proto
 
+
+def validInput(s, test, message="invalid input"):
+    while True:
+        proto = input(s)
+        if(test(proto)):
+            return proto
+        print(message)
+
+
+
 samples = inputInt("Number of samples: ")
-model = input("Model to render (.obj): ")
-if ".obj" not in model:
-    model += ".obj"
-material = input("material file (.mtl): ")
-if ".mtl" not in material:
-    material += ".mtl"
+model = validInput("Model to render (.obj): ", path.isfile, message="File does not exist")
+material = validInput("Material File (.obj): ", path.isfile, message="File does not exist")
 width = inputInt("Output Width: ")
 height = inputInt("Output Height: ")
 while True:
-    proto = input("lighting (" + str([i for i in lighting.presets]) + "): " )
+    proto = input("lighting (" + str([i for i in lighting.presets]) + "): ")
     if proto in lighting.presets:
         break
 preset = proto
 output = input("output image name: ")
-output += ".png"
+# add the extension png if necessary
+output += "" if output[-4:] == ".png" else ".png"
 
 
 # Create new scene

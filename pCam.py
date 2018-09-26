@@ -1,16 +1,16 @@
 # Camera.py
-import array
+"Just like cam.py but with multi-threadin"
 from Vector3 import Vec3, Normalize, Cross
 from Ray import Ray
 from Diffuse import OrientedHemiDir
 from random import random
 from math import sin, cos
-import os
 import png
+from multiprocessing.dummy import Pool as ThreadPool
 
 
 class Camera:
-    def __init__(self, Pos, W, H, Fov=1, Samples=256):
+    def __init__(self, Pos, W, H, Fov=1, Samples=256, bgCol=Vec3(1,1,1), numThreads=8):
         """
         Initialises a Camera class.
         Parameters:
@@ -20,6 +20,7 @@ class Camera:
         Optional Parameters:
             Fov: Float. The field of view constant of the camera. Default 1.
             Samples: Int. The rendering sample rate. Deafault 256
+            bgCol: Vec3. The background colour of the scene
         """
         # Init variables
         self.fov = Fov
@@ -28,9 +29,10 @@ class Camera:
         self.pos = Pos  # Camera position
         self.samples = Samples  # Sample Rate
         self.normal = Vec3(0, 0, -1)  # Normal (used for rotation)
-        self.bgColor = Vec3(1, 1, 1)  # background colour
+        self.bgColor = bgCol  # background colour
         self.target = Vec3(0, 0, 0)  # Camera target, used for rotation
         self.barWidth = 50  # progress bar width
+        self.count = 0
         # Array for image data
         self.image_array = [[0]*(self.w*3) for i in range(self.h)]
         # set rotation matrix
@@ -130,35 +132,43 @@ class Camera:
             tracer: Scene. The scene to be rendered.
             imgOut: String. The name of the output file
         """
-        # loop through all the pixels in the image
-        for x in range(self.w):
-            for y in range(self.h):
-                col = Vec3(0, 0, 0)
-                # Aspect correction in the case the output image is not square
-                # This took me super long to figure out
-                mx = ((x + (self.h - self.w) / 2) * self.w/self.h)
-                # average the samples
-                for i in range(self.samples):
-                    # calculate direction
-                    # Adds the random to get anti-aliasing
-                    a = self.getDir(mx + random(), y + random())
-                    # create ray for rendering
-                    ray = Ray(orig=self.pos, dir=a)
-                    # render!
-                    col = col + self.rendererCalcColor(ray, 4, tracer)
-                col = col ^ (1 / self.samples)  # average the samples
-                self.savePixel(col, x, y)  # save pixel
-            # ===Update progress bar===
-            # Clear terminal
-            os.system('cls' if os.name == 'nt' else 'clear')
+        # Start the multi threading
+        self.tracer = tracer
+        pool = ThreadPool(5)
+        results = pool.map(self.initRay, [i for i in range(self.w)])
+        # ===Update progress bar===
+        # Clear terminal
+        """os.system('cls' if os.name == 'nt' else 'clear')
             # Calculate progress
             prog = int(round((x) / self.w * self.barWidth))
             # Print progress bar
             print("[" + "=" * prog + ">" + " " * (self.barWidth - prog) + "] " +
                   str(round(prog * (100 / self.barWidth))) +
-                  "% completed")
+                  "% completed")"""
+        # Wait for rendering to finish
+        pool.close()
+        pool.join()
         # ===Save Image===
         self.saveImage(imgOut)  # save image
+
+    def initRay(self, x):
+        for y in range(0, self.h):
+            col = Vec3(0, 0, 0)
+            # Aspect correction in the case the output image is not square
+            # This took me super long to figure out
+            mx = ((x + (self.h - self.w) / 2) * self.w/self.h)
+            # average the samples
+            for i in range(self.samples):
+                # calculate direction
+                # Adds the random to get anti-aliasing
+                a = self.getDir(mx + random(), y + random())
+                # create ray for rendering
+                ray = Ray(orig=self.pos, dir=a)
+                # render!
+                col = col + self.rendererCalcColor(ray, 4, self.tracer)
+            col = col ^ (1 / self.samples)  # average the samples
+            self.savePixel(col, x, y)  # save pixel
+        return "complete"
 
     def rendererCalcColor(self, ray, numBounce, tracer):
         """

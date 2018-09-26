@@ -13,14 +13,14 @@ scene = Scene()
 # Load Model and materials
 scene.loadModel("models/pyramid.obj", "models/pyramid.mtl")
 # Create Sun
-sun = Sun(pos=Vec3(40, 100, 30))
+sun = Sun(pos=Vec3(80, 50, 50))
 sun.lookAt(Vec3(0, 0, 0))
 scene.addLight(sun)
 # Create sky
 sky = Sky()
 scene.addLight(sky)
 # Create Camera
-cam = Camera(Vec3(8, 4, 8), int(2000), int(2000), Fov=1.4, Samples=200)
+cam = Camera(Vec3(8, 4, 8), int(200), int(200), Fov=1.4, Samples=2)
 cam.lookAt(Vec3(0, 3, 0))
 # Render scene
 ts = timer()
